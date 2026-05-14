@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIContext Saver — Settings</title>
+  <script>
+    try {
+      const t = localStorage.getItem('capsule-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = t;
+    } catch(e) {}
+  </script>
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+
+  <div class="page">
+
+    <!-- Header -->
+    <header class="s-header">
+      <div class="s-logo-box">
+        <img src="../icons/icon48.png" alt="" width="24" height="24"
+          style="border-radius:4px;display:block;"
+          onerror="this.replaceWith(document.createTextNode('C'))"/>
+      </div>
+      <div class="s-logo-text">
+        <span class="s-logo">AIContext Saver</span>
+        <span class="s-subtitle">Settings</span>
+      </div>
+      <div class="theme-toggle" id="themeToggle" role="group" aria-label="Theme">
+        <button class="theme-opt" data-theme="light" aria-label="Light mode">&#9788;</button>
+        <button class="theme-opt" data-theme="dark"  aria-label="Dark mode">&#9790;</button>
+      </div>
+    </header>
+
+    <!-- API Config -->
+    <section class="s-card">
+      <h2 class="s-section-title">API Configuration</h2>
+      <p class="s-section-desc">
+        Connect any OpenAI-compatible API to generate Smart capsules.
+        Your key is stored only in your browser — never sent anywhere except the API you configure.
+      </p>
+
+      <div class="s-field">
+        <label for="apiUrl">API Base URL</label>
+        <input type="url" id="apiUrl"
+          placeholder="https://integrate.api.nvidia.com/v1"
+          autocomplete="off" spellcheck="false"/>
+      </div>
+
+      <div class="s-field">
+        <label for="apiKey">API Key</label>
+        <div class="s-password-wrap">
+          <input type="password" id="apiKey"
+            placeholder="nvapi-xxxxxxxxxxxxxxxxxxxx"
+            autocomplete="off" spellcheck="false"/>
+          <button class="s-toggle-key" id="toggleKey" title="Show / hide key">&#128065;</button>
+        </div>
+      </div>
+
+      <div class="s-field">
+        <label for="apiModel">Model Name</label>
+        <input type="text" id="apiModel"
+          placeholder="nvidia/llama-3.1-nemotron-ultra-253b-v1"
+          autocomplete="off" spellcheck="false"/>
+      </div>
+
+      <div class="s-btn-row">
+        <button class="s-btn-test" id="testBtn">Test Connection</button>
+        <button class="s-btn-save" id="saveBtn">Save Settings</button>
+      </div>
+
+      <div id="testResult" class="s-result hidden"></div>
+      <div id="saveResult" class="s-result hidden"></div>
+    </section>
+
+    <!-- Presets -->
+    <section class="s-card">
+      <h2 class="s-section-title">Quick-fill Presets</h2>
+      <p class="s-section-desc">Click a provider to pre-fill the URL and model. Paste your own API key.</p>
+
+      <div class="s-preset-grid">
+        <button class="s-preset-btn" data-url="https://integrate.api.nvidia.com/v1" data-model="nvidia/llama-3.1-nemotron-ultra-253b-v1">
+          <span class="s-preset-name">NVIDIA Build</span>
+          <span class="s-preset-tag free">Free</span>
+        </button>
+        <button class="s-preset-btn" data-url="https://api.groq.com/openai/v1" data-model="llama-3.3-70b-versatile">
+          <span class="s-preset-name">Groq</span>
+          <span class="s-preset-tag free">Free Tier</span>
+        </button>
+        <button class="s-preset-btn" data-url="https://openrouter.ai/api/v1" data-model="anthropic/claude-3.5-sonnet">
+          <span class="s-preset-name">OpenRouter</span>
+          <span class="s-preset-tag">Multi-model</span>
+        </button>
+        <button class="s-preset-btn" data-url="http://localhost:11434/v1" data-model="llama3" data-key="ollama">
+          <span class="s-preset-name">Ollama (Local)</span>
+          <span class="s-preset-tag free">Free Local</span>
+        </button>
+        <button class="s-preset-btn" data-url="https://api.openai.com/v1" data-model="gpt-4o">
+          <span class="s-preset-name">OpenAI</span>
+          <span class="s-preset-tag paid">Paid</span>
+        </button>
+        <button class="s-preset-btn" data-url="https://openrouter.ai/api/v1" data-model="anthropic/claude-sonnet-4-5" title="Use OpenRouter to access Claude — Anthropic's API is not directly compatible.">
+          <span class="s-preset-name">Claude (via OpenRouter)</span>
+          <span class="s-preset-tag">Compatible</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Setup Guide (collapsible) -->
+    <section class="s-card s-guide">
+      <button class="s-guide-toggle" id="guideToggle" aria-expanded="false" aria-controls="guideBody">
+        <h2 class="s-section-title">Free Setup Guide — NVIDIA Build</h2>
+        <span class="s-guide-chevron" aria-hidden="true">&#9660;</span>
+      </button>
+      <div class="s-guide-body" id="guideBody" hidden>
+        <ol class="s-guide-steps">
+          <li>Go to <a href="https://build.nvidia.com" target="_blank" rel="noopener">build.nvidia.com</a> and sign up free — no credit card needed.</li>
+          <li>Browse any model (e.g. <em>Llama 3.1 Nemotron</em>) → click <strong>Get API Key</strong> → copy the <code>nvapi-…</code> key.</li>
+          <li>Click <strong>NVIDIA Build</strong> above to pre-fill the URL and model.</li>
+          <li>Paste your key into the API Key field.</li>
+          <li>Click <strong>Test Connection</strong> — if green, click <strong>Save Settings</strong>.</li>
+          <li>Done. 40 free requests/minute, no expiry, no credit card.</li>
+        </ol>
+        <div class="s-alt-options">
+          <strong>Other free options:</strong>
+          <ul>
+            <li><strong>Groq</strong> — <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a> — free tier, very fast</li>
+            <li><strong>OpenRouter</strong> — <a href="https://openrouter.ai" target="_blank" rel="noopener">openrouter.ai</a> — free models available</li>
+            <li><strong>Ollama</strong> — <a href="https://ollama.com" target="_blank" rel="noopener">ollama.com</a> — runs locally, completely free</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script type="module" src="settings.js"></script>
+</body>
+</html>

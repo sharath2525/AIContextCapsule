@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capsule Hub</title>
+  <!-- Prevent flash of wrong theme -->
+  <script src="theme-init.js"></script>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <div id="animLayer" aria-hidden="true"></div>
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo">
+        <img src="../icons/icon48.png" alt="" width="22" height="22"
+          style="display:block;border-radius:4px;"
+          onerror="this.replaceWith(document.createTextNode('C'))"/>
+      </div>
+      <div class="brand-info">
+        <span class="brand-name">AIContext Saver</span>
+        <span class="brand-sub">Capsule System</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="theme-toggle" id="themeToggle" role="group" aria-label="Theme">
+        <button class="theme-opt" data-theme="light" aria-label="Light mode">&#9788;</button>
+        <button class="theme-opt" data-theme="dark"  aria-label="Dark mode">&#9790;</button>
+      </div>
+      <button class="btn-header-icon" id="settingsBtn" title="Settings" aria-label="Open settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Storage strip ───────────────────────────────────────────────────── -->
+  <div class="storage-strip" id="storageBarWrap" title="Storage usage">
+    <div class="storage-strip-fill" id="storageBarFill"></div>
+  </div>
+
+  <!-- ── Save bar ────────────────────────────────────────────────────────── -->
+  <section class="save-bar">
+    <input
+      type="text"
+      id="capsuleName"
+      class="field-input"
+      placeholder="Name this capsule…"
+      maxlength="80"
+      autocomplete="off"
+    />
+    <button class="btn-primary" id="saveBtn" aria-label="Save capsule">
+      <span id="saveBtnText">Save</span>
+      <span id="saveBtnSpinner" class="spinner hidden" aria-hidden="true"></span>
+    </button>
+    <div id="saveProgress" class="save-progress hidden" aria-live="polite">
+      <span class="sp-step" id="sp1" data-label="Capturing">&#9675; Capturing</span>
+      <span class="sp-sep">&#8594;</span>
+      <span class="sp-step" id="sp2" data-label="Summarizing">&#9675; Summarizing</span>
+      <span class="sp-sep">&#8594;</span>
+      <span class="sp-step" id="sp3" data-label="Saving">&#9675; Saving</span>
+    </div>
+    <div id="statusMsg" class="status-msg hidden" aria-live="polite"></div>
+  </section>
+
+  <!-- ── Search ──────────────────────────────────────────────────────────── -->
+  <div class="search-bar">
+    <svg class="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input
+      type="search"
+      id="searchInput"
+      class="field-input search-input"
+      placeholder="Search capsules…"
+      autocomplete="off"
+      aria-label="Search capsules"
+    />
+  </div>
+
+  <!-- ── Storage warning ────────────────────────────────────────────────── -->
+  <div id="storageWarn" class="storage-warn hidden" role="alert">
+    Storage nearly full — delete old capsules to continue saving.
+  </div>
+
+  <!-- ── Capsule list ────────────────────────────────────────────────────── -->
+  <main id="capsuleList" class="capsule-list">
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">&#x1FAB7;</div>
+      <div class="empty-title">No capsules yet</div>
+      <div class="empty-sub">Open a supported AI chat (ChatGPT, Claude, Gemini, Grok, Copilot, Perplexity, DeepSeek, Mistral, or Meta AI), have a conversation, then click Save.</div>
+    </div>
+  </main>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

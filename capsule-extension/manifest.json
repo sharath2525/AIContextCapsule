@@ -1,0 +1,84 @@
+{
+  "manifest_version": 3,
+  "name": "AIContext Saver",
+  "version": "1.4.0",
+  "description": "Save AI conversations as smart capsules. Drag or click to inject context anywhere — full or AI-compressed summary.",
+  "minimum_chrome_version": "116",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://grok.com/*",
+    "https://copilot.microsoft.com/*",
+    "https://perplexity.ai/*",
+    "https://www.perplexity.ai/*",
+    "https://chat.deepseek.com/*",
+    "https://chat.mistral.ai/*",
+    "https://meta.ai/*",
+    "https://www.meta.ai/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "settings/settings.html",
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["content/chatgpt.js", "content/widget.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content/claude.js", "content/widget.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["content/gemini.js", "content/widget.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://grok.com/*"],
+      "js": ["content/grok.js", "content/widget.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://copilot.microsoft.com/*"],
+      "js": ["content/copilot.js", "content/widget.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://perplexity.ai/*", "https://www.perplexity.ai/*"],
+      "js": ["content/perplexity.js", "content/widget.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chat.deepseek.com/*"],
+      "js": ["content/deepseek.js", "content/widget.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chat.mistral.ai/*"],
+      "js": ["content/mistral.js", "content/widget.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://meta.ai/*", "https://www.meta.ai/*"],
+      "js": ["content/meta.js", "content/widget.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

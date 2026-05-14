@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIContext Saver — Export</title>
+  <style>
+    /* ── Screen styles ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:    #1A1527;
+      --cream:  #F2F0E8;
+      --green:  #22C55E;
+      --blue:   #3B82F6;
+      --orange: #F97316;
+      --purple: #8B5CF6;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      padding: 32px 24px 60px;
+      max-width: 780px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* ── Print button (screen only) ─────────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: var(--green);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 3px 3px 0 var(--ink);
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      transition: transform .08s, box-shadow .08s;
+    }
+    .btn:hover  { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+    .btn:active { transform: translate(2px,2px); box-shadow: none; }
+    .btn.ghost  { background: #fff; color: var(--ink); }
+
+    .toolbar-note {
+      font-size: 12px;
+      color: #6b6b8a;
+      font-style: italic;
+    }
+
+    /* ── Export document ─────────────────────────────────────────────────── */
+    .doc-header {
+      background: #fff;
+      border: 2px solid var(--ink);
+      border-radius: 14px;
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 22px 24px 18px;
+      margin-bottom: 18px;
+    }
+
+    .doc-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .logo-box {
+      width: 38px; height: 38px;
+      background: #1A1B1E;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .logo-text { font-size: 15px; font-weight: 800; }
+    .logo-sub  { font-size: 10px; color: #9896B2; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .doc-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .meta-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .meta-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1.5px solid var(--ink);
+    }
+    .badge-gpt        { background: #DCFCE7; color: #15803D; }
+    .badge-claude     { background: #EDE9FE; color: #6D28D9; }
+    .badge-gemini     { background: #DBEAFE; color: #1E40AF; }
+    .badge-grok       { background: #F3F4F6; color: #111827; }
+    .badge-copilot    { background: #E0F2FE; color: #0369A1; }
+    .badge-perplexity { background: #F0FDF4; color: #166534; }
+    .badge-deepseek   { background: #FFF7ED; color: #C2410C; }
+    .badge-mistral    { background: #FEF3C7; color: #92400E; }
+    .badge-meta       { background: #EFF6FF; color: #1D4ED8; }
+    .badge-date   { background: #fff; color: var(--ink); }
+    .badge-chars  { background: #FEF9C3; color: #92400E; }
+
+    /* ── Section card ─────────────────────────────────────────────────────── */
+    .section {
+      background: #fff;
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 4px 4px 0 var(--ink);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .section-head {
+      padding: 12px 18px;
+      border-bottom: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .section-head.smart { background: #EFF6FF; }
+    .section-head.raw   { background: #FFF7ED; }
+
+    .section-body {
+      padding: 16px 18px;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #2d2b4e;
+    }
+
+    /* Structured summary rendering */
+    .ss-item {
+      margin-bottom: 14px;
+      padding: 10px 13px;
+      background: #FAF9F4;
+      border: 1.5px solid #e0dedd;
+      border-radius: 8px;
+    }
+    .ss-item-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--purple);
+      margin-bottom: 4px;
+    }
+    .ss-item-body {
+      font-size: 13px;
+      color: #4E4B6B;
+      line-height: 1.6;
+    }
+
+    /* ── Raw conversation ─────────────────────────────────────────────────── */
+    .msg { margin-bottom: 14px; }
+    .msg-role {
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .role-user      { color: var(--orange); }
+    .role-assistant { color: var(--blue); }
+    .msg-text {
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg-divider {
+      border: none;
+      border-top: 1.5px dashed #ddd;
+      margin: 10px 0;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────────────── */
+    .doc-footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 11px;
+      color: #9896B2;
+      padding-top: 14px;
+      border-top: 2px solid var(--ink);
+    }
+
+    /* ── Loading state ───────────────────────────────────────────────────── */
+    #loading {
+      text-align: center;
+      padding: 60px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #6b6b8a;
+    }
+
+    /* ── Print styles ─────────────────────────────────────────────────────── */
+    @media print {
+      .toolbar { display: none !important; }
+      body { background: #fff; padding: 12px 10px; max-width: 100%; }
+      .doc-header, .section { box-shadow: none !important; }
+      .section { page-break-inside: avoid; }
+      .ss-item  { page-break-inside: avoid; }
+      .msg      { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toolbar (hidden in print) -->
+  <div class="toolbar" id="toolbar">
+    <button class="btn" onclick="window.print()">🖨️ Save as PDF</button>
+    <button class="btn ghost" onclick="window.close()">✕ Close</button>
+    <span class="toolbar-note">Tip: In the print dialog choose "Save as PDF" for best results.</span>
+  </div>
+
+  <div id="loading">⏳ Loading capsule data…</div>
+  <div id="content" style="display:none"></div>
+
+  <script src="export.js"></script>
+</body>
+</html>

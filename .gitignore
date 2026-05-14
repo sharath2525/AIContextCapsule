@@ -1,0 +1,43 @@
+# Generated graphs and caches
+graphify-out/
+.graphify*.json
+.graphify*.txt
+
+# Local dev environments
+.claude/
+.playwright-mcp/
+gstack/
+
+# Dependencies
+node_modules/
+*.lock
+
+# Test artifacts
+test-screenshots/
+.auth-state.json
+selector-health-check.log
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# Build outputs (if any future builds added)
+dist/
+build/
+*.crx

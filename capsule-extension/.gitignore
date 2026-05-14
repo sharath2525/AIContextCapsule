@@ -1,0 +1,4 @@
+# Dev/test artifacts — never commit these
+.auth-state.json
+test-screenshots/
+node_modules/
