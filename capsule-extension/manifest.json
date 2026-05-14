@@ -4,6 +4,7 @@
   "version": "1.4.0",
   "description": "Save AI conversations as smart capsules. Drag or click to inject context anywhere — full or AI-compressed summary.",
   "minimum_chrome_version": "116",
+  "homepage_url": "https://github.com/sharath2525/AIContextCapsule",
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": [
     "https://chatgpt.com/*",

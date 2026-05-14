@@ -4,13 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AIContext Saver — Settings</title>
-  <script>
-    try {
-      const t = localStorage.getItem('capsule-theme') ||
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      document.documentElement.dataset.theme = t;
-    } catch(e) {}
-  </script>
+  <script src="../popup/theme-init.js"></script>
   <link rel="stylesheet" href="settings.css" />
 </head>
 <body>
@@ -137,5 +131,11 @@
   </div>
 
   <script type="module" src="settings.js"></script>
+
+  <footer style="text-align:center;padding:20px 0 8px;font-size:0.75rem;opacity:0.5;">
+    <a href="../privacy.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Privacy Policy</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/sharath2525/AIContextCapsule" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">GitHub</a>
+  </footer>
 </body>
 </html>

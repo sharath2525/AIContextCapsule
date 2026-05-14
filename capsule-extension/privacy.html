@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIContext Saver — Privacy Policy</title>
+  <script src="popup/theme-init.js"></script>
+  <style>
+    :root {
+      --bg:      #F2F0E8;
+      --surface: #ffffff;
+      --ink:     #1A1527;
+      --muted:   #6B6778;
+      --border:  #1A1527;
+      --accent:  #3B82F6;
+    }
+    [data-theme="dark"] {
+      --bg:      #16141f;
+      --surface: #1e1c2b;
+      --ink:     #d4d0e8;
+      --muted:   #9994b0;
+      --border:  #3a3650;
+      --accent:  #60a5fa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI Variable', system-ui, -apple-system, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.7;
+      padding: 0 0 48px;
+    }
+    .page { max-width: 680px; margin: 0 auto; padding: 32px 24px; }
+    header {
+      display: flex; align-items: center; gap: 12px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 32px;
+    }
+    header img { border-radius: 6px; width: 36px; height: 36px; }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header p  { font-size: 0.8rem; color: var(--muted); }
+    h2 {
+      font-size: 1rem; font-weight: 700;
+      margin: 32px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    p  { margin-bottom: 12px; font-size: 0.9rem; color: var(--muted); }
+    ul { margin: 0 0 12px 20px; }
+    ul li { font-size: 0.9rem; color: var(--muted); margin-bottom: 6px; }
+    strong { color: var(--ink); }
+    .highlight-box {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      box-shadow: 3px 3px 0 var(--border);
+    }
+    .highlight-box p { margin: 0; color: var(--ink); font-weight: 600; font-size: 0.9rem; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .updated { font-size: 0.8rem; color: var(--muted); margin-bottom: 24px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <img src="icons/icon48.png" alt="" onerror="this.style.display='none'" />
+    <div>
+      <h1>AIContext Saver</h1>
+      <p>Privacy Policy</p>
+    </div>
+  </header>
+
+  <p class="updated">Last updated: May 2026</p>
+
+  <div class="highlight-box">
+    <p>&#x1F512; All your data stays on your device. We never collect, store, or transmit your conversations or API keys to our servers — because we have no servers.</p>
+  </div>
+
+  <h2>What This Extension Does</h2>
+  <p>AIContext Saver captures AI conversations from supported platforms (ChatGPT, Claude, Gemini, and others), stores them locally in your browser, and lets you inject saved context into new chats.</p>
+
+  <h2>Data We Collect</h2>
+  <p>The extension processes the following data solely on your device:</p>
+  <ul>
+    <li><strong>AI conversation content</strong> — Text from conversations you explicitly choose to save. Stored locally in <code>chrome.storage.local</code> on your device.</li>
+    <li><strong>AI-generated summaries</strong> — Structured summaries produced by your configured AI API. Stored locally.</li>
+    <li><strong>API credentials</strong> — The API key, URL, and model name you configure in Settings. Encrypted with AES-256-GCM and stored only on your device.</li>
+    <li><strong>Theme preference</strong> — Light or dark mode. Stored in <code>localStorage</code> on your device.</li>
+  </ul>
+
+  <h2>Data We Do NOT Collect</h2>
+  <ul>
+    <li>We do <strong>not</strong> have any servers or databases.</li>
+    <li>We do <strong>not</strong> collect analytics, usage metrics, or crash reports.</li>
+    <li>We do <strong>not</strong> read your conversations without your explicit action (clicking Save).</li>
+    <li>We do <strong>not</strong> store any data outside your local browser storage.</li>
+    <li>We do <strong>not</strong> sell, share, or transfer your data to any third party.</li>
+    <li>We do <strong>not</strong> have access to your AI account credentials (passwords, cookies).</li>
+  </ul>
+
+  <h2>Third-Party API Transmission</h2>
+  <p>When you click Save, the extension sends conversation text to the <strong>AI API you configure</strong> (e.g., NVIDIA Build, Groq, OpenRouter, OpenAI, or your local Ollama instance) to generate a summary. This transmission:</p>
+  <ul>
+    <li>Goes directly from your browser to the API endpoint you specified — never through our servers.</li>
+    <li>Is governed by the privacy policy of your chosen API provider, not this extension.</li>
+    <li>Only occurs when you explicitly click the Save button.</li>
+    <li>Can be avoided entirely by using a local provider (Ollama) that runs on your own machine.</li>
+  </ul>
+
+  <h2>Permissions Explained</h2>
+  <ul>
+    <li><strong>storage</strong> — Required to save and retrieve your capsules from <code>chrome.storage.local</code>.</li>
+    <li><strong>activeTab</strong> — Required to read the AI conversation from the tab you are currently viewing when you click Save.</li>
+    <li><strong>scripting</strong> — Required to inject the context-restore script into the chat input field.</li>
+    <li><strong>Host permissions</strong> (chatgpt.com, claude.ai, etc.) — Required to read conversation content and inject text on supported AI platforms only. No other sites are accessed.</li>
+  </ul>
+
+  <h2>Data Security</h2>
+  <ul>
+    <li>API keys are encrypted using AES-256-GCM with PBKDF2 key derivation (100,000 iterations, SHA-256).</li>
+    <li>All storage is local to your browser. Clearing browser data removes all extension data.</li>
+    <li>A 4.8 MB soft quota is enforced to prevent excessive local storage usage.</li>
+    <li>Strict Content Security Policy: <code>script-src 'self'; object-src 'none'</code> — no external scripts, no eval().</li>
+  </ul>
+
+  <h2>Children's Privacy</h2>
+  <p>This extension does not knowingly collect any information from children under 13. It does not collect personal information from any user.</p>
+
+  <h2>Changes to This Policy</h2>
+  <p>If this policy changes materially, the extension version number will be incremented and the update date above will change. The latest version is always available at the extension's GitHub repository.</p>
+
+  <h2>Contact</h2>
+  <p>
+    For questions about this privacy policy, please open an issue at
+    <a href="https://github.com/sharath2525/AIContextCapsule/issues" target="_blank" rel="noopener">
+      github.com/sharath2525/AIContextCapsule/issues
+    </a>.
+  </p>
+
+</div>
+</body>
+</html>
