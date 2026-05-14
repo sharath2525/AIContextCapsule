@@ -133,80 +133,16 @@ After `onSave`, `allCapsules.unshift(pair)` adds the new capsule. The new `pair`
 When injection fails via the drag-and-drop menu (`showDropMenu` → `injectWithAnim` → `doInject`), `callback` is `null` (line 513: `setTimeout(() => doInject(text, null, null), 550)`). In `doInject`, failure calls `callback && callback(false, '...')` — the null check means no error is surfaced. `dismissWidget()` is called (widget disappears), injection fails silently. User has no idea what happened.
 
 **U2. `popup.html` empty-state mentions only ChatGPT and Claude — 9 platforms supported**
-`popup.html` line 97: `"Open ChatGPT or Claude, have a conversation, then click Save."` This only mentions 2 of 9 supported platforms. New users who use Gemini, Grok, Copilot, Perplexity, DeepSeek, Mistral, or Meta AI would not know the extension works there. (Note: `checkApiStatus()` replaces this text if the API is not configured, so this text only shows when API is configured and no capsules exist.)
+`popup.html` line 97: `"Open ChatGPT or Claude, have a conversation, then click Save."` This only mentions 2 of 9 supported platforms. New users who use Gemini, Grok, Copilot, Perplexity, DeepSeek, Mistral, or Meta AI would not know the extension works there.
 
 **U3. No visual feedback during 1.5s inject animation in popup**
 When a user clicks Raw or Smart in the popup to inject directly, popup.js shows "Sending to chat…" while `msgTab` blocks for the full ~1.5s until `doInject` completes. The popup shows no progress indicator or animation. After 1.5s, it either shows success or error. This is a noticeable freeze-then-pop UX.
 
 **U4. Export page has no close button or "retry" option on error**
-`export.js` shows `'⚠️ No export data found. Use the export button in the extension popup.'` if the key is missing. There's no button to close the tab or try again. The user must manually close the tab. (Minor, but present.)
+`export.js` shows `'⚠️ No export data found. Use the export button in the extension popup.'` if the key is missing. There's no button to close the tab or try again. The user must manually close the tab.
 
 **U5. `test-screenshots/` folder visible if user inspects the extension directory**
 Not a user-facing bug, but if any user opens the extension directory (e.g., to check what it contains), they see `test-screenshots/` and developer screenshots. This looks unprofessional for a published extension.
-
----
-
-## 📋 FLOW VERIFICATION TABLE
-
-| Flow | Current State | Remaining Issues |
-|------|--------------|-----------------|
-| Save Raw (ChatGPT) | ✅ Solid | None |
-| Save Raw (Claude) | ✅ Solid | None |
-| Save Raw (Gemini) | ✅ Strategy 1/2 solid | Strategy 3: no ancestor dedup |
-| Save Raw (Grok) | ✅ Strategies 1–3 solid | Strategy 4: deduped ✓ |
-| Save Raw (Copilot) | ✅ Throws descriptive error | Shadow DOM still unreadable (architectural) |
-| Save Raw (Perplexity) | ✅ Strategies 1–3 better | Strategy 1 `[data-role]` captures non-chat elements |
-| Save Raw (DeepSeek) | ✅ Strategy 1 solid | Strategies 2+3: no ancestor dedup |
-| Save Raw (Mistral) | ✅ `isKnownRole` guard in S1 | Strategy 3: no ancestor dedup |
-| Save Raw (Meta AI) | ✅ Strategies 1–3 solid | Strategy 4: `[class*="message"]` in thread container OK |
-| Smart Summary | ✅ Timeout, redaction, adaptive tokens | None |
-| Inject via popup buttons | ✅ Working | `resp?.animating` dead code; 1.5s blocking wait |
-| Inject via widget buttons | ✅ Cancel works | None |
-| Inject via drag + drop menu | ⚠️ | Silent fail on error; stale menu after dismiss |
-| Export PDF | ✅ CSP fixed, all labels correct | Export page no close button on error |
-| Export Markdown | ✅ | None |
-| Settings Save | ✅ Guard, disable, re-enable | `testBtn` not re-enabled if `getSettings` throws |
-| Resume Prompt | ✅ Raw preview fixed | None |
-| Storage quota | ✅ Pre+post check | None |
-
----
-
-## 🔬 EDGE CASE ATTACK TABLE
-
-| Edge Case | Expected | Actual Risk | Severity |
-|-----------|----------|-------------|----------|
-| Close widget while drop menu visible | Both dismiss | Only widget dismisses; menu stays; inject fires | **Medium** |
-| `[data-role]` on Perplexity (non-chat element) | Skipped | Captured as 'assistant' message | **Medium** |
-| Screenshots in extension ZIP | Excluded | Physically present; included in Web Store ZIP | **Medium** |
-| `.ProseMirror` on DeepSeek/Mistral | Skip, use platform selector | Matches before platform-specific selector | **Medium** |
-| `textarea[id*="search"]` on Perplexity/DeepSeek | Skip, use platform selector | May match search box before chat input | **Medium** |
-| Ancestor dedup missing (DeepSeek S2/S3) | Clean messages | Duplicate messages in capsule | **Medium** |
-| Ancestor dedup missing (Gemini S3) | Clean messages | Duplicate messages if DOM nested | **Low** |
-| Drop menu inject failure | Error shown | Silent dismiss | **Low** |
-| `testBtn` stuck disabled | Re-enabled | Permanently disabled on storage error | **Low** |
-| Empty-state text on first use | "9 platforms" | Only mentions ChatGPT/Claude | **Low** |
-| Meta AI `aria-label*="message"` duplicate selector | Meta uses its own | Gemini selector matches first (selector 5) | **Low** |
-| `selector-health-check.js` in ZIP | Not present | Present (8 KB overhead, no security risk) | **Low** |
-| `resp?.animating` branch | Triggers on animation start | Never triggers; dead code | **Low** |
-
----
-
-## 🔎 PEER REVIEW
-
-**🔨 BREAKER reviews others:**
-The Security agent's finding S1 (screenshots physically in extension directory) has higher real-world impact than it appears: if the developer creates a Web Store ZIP by simply zipping the directory, the screenshots ship. The most launch-blocking remaining issue is the `getTextarea()` selector collision (B5) — on Perplexity and DeepSeek, inject could silently target the wrong input, making those platforms appear broken.
-
-**🔐 SECURITY reviews others:**
-B2 (drop menu not cleaned up by dismiss) is the most exploitable UX confusion. A malicious page cannot trigger this — it requires the user to take specific actions. But a confused user could inject content they didn't intend to, potentially leaking context into the wrong chat.
-
-**🌪️ CHAOS reviews others:**
-B5 (`getTextarea()` cross-platform collision) is most likely to manifest as a "doesn't work on Perplexity" support report. The `textarea[id*="search"]` selector will match Perplexity's search bar before reaching Perplexity's specific selectors, causing injection to go into the search box instead of the chat input.
-
-**⚡ PERFORMANCE reviews others:**
-The twin `getTextarea()` calls in `injectWithFlyAnim` + `doInject` is the only real performance note. 20 querySelector calls × 2 is still microseconds. No impact in practice.
-
-**👤 UX reviews others:**
-The silent failure on drop-menu inject (U1/B1) is the worst user experience remaining. User drags, chooses Raw or Smart, inject silently fails, widget disappears. No error. User has no recovery path. This will generate confused user reports.
 
 ---
 
@@ -222,71 +158,36 @@ The silent failure on drop-menu inject (U1/B1) is the worst user experience rema
 
 ### 🟡 MEDIUM ISSUES
 
-1. **`dismissWidget()` doesn't remove `#aic-drop-menu`** (`content/widget.js` — `dismissWidget`) — Add `document.getElementById('aic-drop-menu')?.remove()` inside `dismissWidget()`.
+1. **`dismissWidget()` doesn't remove `#aic-drop-menu`** — Add `document.getElementById('aic-drop-menu')?.remove()` inside `dismissWidget()`.
 
-2. **`injectWithAnim` resets `_injectCancelled = false` after prior dismiss** (`content/widget.js` — `injectWithAnim`) — Add guard: `if (_injectCancelled) { _injectCancelled = false; return; }` before resetting the flag in `injectWithAnim`.
+2. **`injectWithAnim` resets `_injectCancelled = false` after prior dismiss** — Add guard: `if (_injectCancelled) { _injectCancelled = false; return; }` before resetting the flag.
 
-3. **`perplexity.js` Strategy 1 `[data-role]` captures non-chat elements** (`content/perplexity.js`) — Add the same `isKnownRole` guard used in mistral.js: skip elements where `data-role` is not one of `user|human|assistant|bot`.
+3. **`perplexity.js` Strategy 1 captures non-chat elements** — Add `isKnownRole` guard: skip elements where `data-role` is not `user|human|assistant|bot`.
 
-4. **`deepseek.js` Strategies 2 and 3 missing ancestor deduplication** (`content/deepseek.js`) — Apply the ancestor-filter to both strategies: `const deduped = arr.filter(el => !arr.some(other => other !== el && other.contains(el)))`.
+4. **`deepseek.js` Strategies 2 and 3 missing ancestor deduplication** — Apply: `const deduped = arr.filter(el => !arr.some(other => other !== el && other.contains(el)))`.
 
-5. **`gemini.js` Strategy 3 missing ancestor deduplication** (`content/gemini.js`) — Same fix: wrap `querySelectorAll('[class*="user-query"], [class*="model-response"]')` result in ancestor-filter before iterating.
+5. **`gemini.js` Strategy 3 missing ancestor deduplication** — Same fix as #4.
 
-6. **`getTextarea()` selector order causes cross-platform collisions** (`content/widget.js` — `getTextarea`) — Move `.ProseMirror[contenteditable="true"]` after all Claude-specific selectors and add a platform-origin prefix check. Move `textarea[id*="search"]` to be more specific (e.g., `textarea#searchBox` or use a Copilot-specific ancestor check). Add `div[contenteditable="true"][aria-label*="message"]` for Meta AI as a separate, more specific selector.
+6. **`getTextarea()` selector order causes cross-platform collisions** — Reorder selectors: move `.ProseMirror` after Claude-specific ones; move `textarea[id*="search"]` to be more specific.
 
-7. **`test-screenshots/` physically in extension directory** — Delete the 3 PNG files from `capsule-extension/test-screenshots/`. The `.gitignore` prevents git commits but not Web Store ZIP inclusion.
-
-### 🔐 SECURITY RISKS
-
-8. **PBKDF2 key = public extension ID (inherited from architecture)** — 100,000 iterations is now compliant. The public-ID limitation is acknowledged. No change required unless a per-device salt mechanism is implemented.
-
-### ⚡ PERFORMANCE ISSUES
-*None beyond the double `getTextarea()` call in `injectWithFlyAnim`, which has no measurable real-world impact.*
+7. **`test-screenshots/` physically in extension directory** — Delete the 3 PNG files.
 
 ### 🧠 UX GAPS
 
-9. **Drop menu inject failure is completely silent** (`content/widget.js` — `showDropMenu`) — Pass an error-display callback from `showDropMenu` to `injectWithAnim` so inject failures can surface a brief on-page toast or log to console.
+8. **Drop menu inject failure is completely silent** — Pass error callback to `injectWithAnim`.
 
-10. **`popup.html` empty-state text only mentions ChatGPT and Claude** (`popup/popup.html` line 97) — Update to: `"Open a supported AI chat (ChatGPT, Claude, Gemini, and 6 more), have a conversation, then click Save."` or reference the full list.
+9. **`popup.html` empty-state mentions only 2 of 9 platforms** — Update to mention all supported platforms.
 
 ### 📦 CLEANUP ITEMS
 
-11. **`resp?.animating` dead code in `popup.js` `onInject`** — Remove the `if (resp?.animating)` branch; `widget.js` never sends `animating: true`.
+10. **`resp?.animating` dead code** — Remove the branch from `popup.js`.
 
-12. **`settings.js` `testBtn.disabled` not reset in exception path** — Wrap `testBtn.disabled = false; testBtn.textContent = 'Test Connection';` in a `finally` block in `onTest`.
+11. **`testBtn.disabled` not reset on exception** — Wrap reset in `finally` block.
 
-13. **`selector-health-check.js` still in extension directory** — Move to the project root alongside `package.json` (outside `capsule-extension/`).
-
-14. **Duplicate `div[contenteditable="true"][aria-label*="message"]` selector in `getTextarea()`** — The Meta AI selector at position 19 is unreachable because the identical Gemini selector at position 5 always matches first. Differentiate them (e.g., anchor Meta's selector to a Meta-specific ancestor).
-
-15. **`manifest.json` version still `1.3.0`** — After 180+ bug fixes, bump to `1.4.0` before Web Store submission.
+12. **`selector-health-check.js` in extension directory** — Move to project root.
 
 ---
 
-## 📊 COMPLETE IMPACT TABLE
-
-| # | Issue | Severity | Actual Impact | Affected Files | Real-World Risk | Fix | Mandatory Before Production |
-|---|-------|----------|---------------|----------------|-----------------|-----|----------------------------|
-| 1 | `dismissWidget` doesn't remove drop menu | **Medium** | Stale drop menu after widget close; inject fires against user intent | `content/widget.js` | User injects content they explicitly cancelled | Add `document.getElementById('aic-drop-menu')?.remove()` in `dismissWidget()` | **YES** |
-| 2 | `injectWithAnim` resets `_injectCancelled` | **Medium** | Post-dismiss inject from drop menu | `content/widget.js` | Text injected after explicit Close press | Guard `if (_injectCancelled) return;` before resetting | **YES** |
-| 3 | Perplexity `[data-role]` no role validation | **Medium** | Nav/region elements captured as 'assistant' messages | `content/perplexity.js` | Garbled Perplexity capsules | Add `isKnownRole` guard matching mistral.js pattern | **YES** |
-| 4 | DeepSeek Strategies 2+3 no dedup | **Medium** | Parent+child elements double-captured | `content/deepseek.js` | Duplicate messages in DeepSeek capsules | Apply ancestor-filter to both strategies | **YES** |
-| 5 | Gemini Strategy 3 no dedup | **Medium** | Nested elements double-captured | `content/gemini.js` | Duplicate messages in Gemini capsules (if S3 runs) | Apply ancestor-filter | **YES** |
-| 6 | `getTextarea()` cross-platform selector collision | **Medium** | `.ProseMirror` or `[id*="search"]` matches wrong element on non-target platform | `content/widget.js` | Inject goes to search box or editor on DeepSeek/Perplexity | Reorder/tighten platform-specific selectors | **YES** |
-| 7 | `test-screenshots/*.png` in extension ZIP | **Medium** | Screenshots ship with extension; may show developer login state | `test-screenshots/` | Sensitive data in published extension | Delete 3 PNG files from extension dir | **YES** |
-| 8 | Drop menu inject failure is silent | **Low** | User sees widget vanish with no error | `content/widget.js` | Confusing UX; user retries or gives up | Pass error callback to `injectWithAnim` | NO |
-| 9 | `popup.html` empty-state mentions 2 of 9 platforms | **Low** | New users on Gemini/Grok etc. don't know extension works there | `popup/popup.html` | Reduced discoverability for 7 platforms | Update text to mention all supported platforms | NO |
-| 10 | `resp?.animating` dead code | **Low** | Code confusion; branch never taken | `popup/popup.js` | Misleads debugging | Remove the `animating` branch | NO |
-| 11 | `testBtn.disabled` not reset on storage exception | **Low** | Test button stuck disabled | `settings/settings.js` | User can't test again without reopening settings | Wrap reset in `finally` block | NO |
-| 12 | `selector-health-check.js` in extension dir | **Low** | 8 KB bloat in Web Store ZIP | `selector-health-check.js` | Unprofessional; minor ZIP bloat | Move to project root (outside `capsule-extension/`) | NO |
-| 13 | Duplicate `aria-label*="message"]` selector | **Low** | Meta AI inject selector never reached | `content/widget.js` | Meta AI inject falls back to `role="textbox"` (still works) | Differentiate Meta vs Gemini selector | NO |
-| 14 | PBKDF2 public extension ID as password | **Low** | Encryption key derivable from public info | `utils/storage.js` | Requires storage dump + public ID; deterrent only | Accept as architectural constraint or add per-device salt | NO |
-| 15 | Version still `1.3.0` after 180+ fixes | **Low** | Wrong version in Web Store listing | `manifest.json` | Confuses users if they report bugs by version | Bump to `1.4.0` | YES (Web Store) |
-
----
-
-## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## COUNCIL VERDICT
-## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**The extension is in substantially good shape.** All V6 critical and high-risk issues are confirmed resolved. The 7 production-mandatory issues remaining are all Medium or Low — none will cause crashes, data loss, or security breaches. The two most impactful fixes are: (1) cleaning up `#aic-drop-menu` in `dismissWidget()` to prevent unintended injection after explicit Close, and (2) deleting `test-screenshots/*.png` before creating the Web Store ZIP. After those 7 mandatory items are addressed, the extension is ready for production submission at version `1.4.0`.
+**The extension is in substantially good shape.** All V6 critical and high-risk issues are confirmed resolved. The 7 production-mandatory issues remaining are all Medium or Low — none will cause crashes, data loss, or security breaches. After addressing the 7 mandatory items, the extension is ready for production submission at version `1.4.0`.

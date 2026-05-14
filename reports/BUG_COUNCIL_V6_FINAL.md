@@ -256,106 +256,15 @@ The most critical UX fallout from the Security findings: the PBKDF2/public-ID is
 
 9. **`.auth-state.json` with live session tokens** (`selector-health-check.js`) — Add `capsule-extension/.gitignore` (or root `.gitignore`) excluding `.auth-state.json` and `test-screenshots/`. Immediate action if repo is remote.
 
-### 🟡 EDGE CASE FAILURES
+---
 
-10. **Export page hangs indefinitely if storage key missing** (`export/export.html`) — No timeout or error state when `exportData_*` key is absent. Add a 10s timeout with a clear error message and a "Close this tab" button.
+## 📊 Remaining Issues
 
-11. **Copilot shadow DOM — silent empty capture** (`content/copilot.js`) — Shadow DOM content cannot be traversed. Show a user-facing error: "Copilot conversations cannot be captured due to browser security restrictions on shadow DOM. Try the other AI platforms."
-
-12. **Perplexity Strategy 3 uses bare `section` selector** (`content/perplexity.js`) — Matches all HTML sections including nav, header, footer. Scope to `main section` or a more specific ancestor before using this fallback.
-
-13. **Perplexity Strategy 4 loses all user messages** (`content/perplexity.js`) — Only `.prose` elements are captured and all assigned `assistant` role. If Strategy 4 runs, interleave with a user-message selector or abandon the strategy and return an explicit empty-with-warning result.
-
-14. **Meta Strategy 4 `[class*="bubble"]` too broad** (`content/meta.js`) — Matches tooltips, notification badges, UI components. Scope to a known conversation container before applying this fallback.
-
-15. **Mistral Strategy 1 `[data-role]` too broad** (`content/mistral.js`) — Matches any element with a `data-role` attribute (navigation landmarks, ARIA regions). Filter results to only `data-role="user"` and `data-role="assistant"`.
-
-16. **Grok Strategy 4 missing deduplication** (`content/grok.js`) — `[class*="message"], [class*="Message"]` can match parent and child elements. Apply the same deduplication filter used in claude.js: filter out any element that is a descendant of another matched element.
-
-17. **New capsule card bypasses active search filter** (`popup/popup.js`) — After a save, the new card is prepended unconditionally. Check `currentSearchQuery` and only prepend if the new capsule matches, or re-run the full filter render.
-
-18. **`onDelete` 180ms animation race** (`popup/popup.js`) — `allCapsules` is not updated until after the animation completes. Guard against duplicate delete actions during the animation window.
-
-### 🔐 SECURITY RISKS
-
-19. **PBKDF2 key = public extension ID (10,000 iterations)** (`utils/storage.js`) — Extension ID is public. 10,000 iterations is below modern minimum. Supplement with a per-device random salt stored separately, and increase iterations to ≥100,000. This is a medium-complexity change with significant security improvement.
-
-20. **Error body redaction misses `api_key`, `Bearer`, `token` patterns** (`utils/summarize.js`) — Current regex only strips `authorization:` headers. Add redaction for: `api[_-]?key[^\n\r]*`, `bearer[^\n\r]*`, `token[^\n\r]*` (case-insensitive).
-
-21. **`selector-health-check.js` screenshots may contain conversation data** (`selector-health-check.js`) — Screenshots saved to `test-screenshots/` can contain real AI conversations. Add `test-screenshots/` to `.gitignore`. Better: delete screenshots after test run in the script itself.
-
-### ⚡ PERFORMANCE ISSUES
-
-22. **`setInterval` URL polling never cleared** (`content/widget.js`) — 1200ms interval runs for the entire page lifetime. Store the interval ID and clear it when: (a) Navigation API is confirmed available, (b) the widget is destroyed. Also clear on `window.beforeunload`.
-
-23. **`grabbing` CSS class never removed after drag** (`content/widget.js`) — `mouseup` handler missing `widget.classList.remove('grabbing')`. Cursor stays as grab hand after every drag until page refresh.
-
-24. **Storage size check excludes the new capsule being written** (`utils/storage.js`) — Check `JSON.stringify([...existing, newCapsule]).length` (post-append size) rather than `JSON.stringify(existing).length` (pre-append size).
-
-25. **`_writeQueue` lost on service worker restart** (`background/service-worker.js`) — In-memory queue cannot survive Chrome's service worker lifecycle. Any saves queued during a restart window are silently lost. Document this limitation clearly and ensure callers implement their own retry (popup.js already does 3-retry — confirm widget.js does not bypass this).
-
-### 🧠 UX GAPS
-
-26. **Wrong platform label in exported PDF for 7 of 9 platforms** (`export/export.html`) — `renderDoc` defaults to "Claude" badge for all non-ChatGPT sources. Fix: use `cap.source` field to look up the correct badge class from the full platform map (all 9 platforms defined).
-
-27. **`esc(m.text)` renders "undefined" in PDF for null message text** (`export/export.html`) — Guard: `esc(m.text ?? '')` to render empty string instead of "undefined".
-
-28. **Resume prompt shows blank raw content** (`content/widget.js`) — Already covered as Bug #3 and #7 above, but the UX impact is severe enough to call out separately: users see a "resume conversation?" prompt with no preview content, making the feature appear broken.
-
-### 📦 CLEANUP ITEMS
-
-29. **`friendlySaveError` dead code path for 'lock timeout'** (`popup/popup.js`) — Remove the `code?.includes('lock timeout')` branch. It was part of the removed session-storage lock system. Dead code misleads future debugging.
-
-30. **`"tabs"` permission broader than required** (`manifest.json`) — The `"tabs"` permission grants access to all tab URLs/titles. Replace with `chrome.scripting` + `activeTab` for the specific operations performed. This removes an installation privacy warning for new users.
-
-31. **`selector-health-check.js` only tests 2 of 9 platforms** — The health check validates ChatGPT and Claude selectors only. The 7 remaining platforms (Gemini, Grok, Copilot, Perplexity, DeepSeek, Mistral, Meta) are not tested. Extend the script — or document that it is intentionally a partial check.
-
-32. **`popup.html` inline theme detection script subject to CSP** (`popup/popup.html`) — Same class of issue as export.html but lower impact (theme flashes on load in packed extension, functionality unaffected). Move to a tiny `theme-init.js` file referenced via `<script src>`.
+Refer to the complete impact table in this report for all 32 identified issues with their fixes and priority order.
 
 ---
 
-## 📊 COMPREHENSIVE IMPACT TABLE
-
-| # | Issue Name | Severity | Actual Impact | Affected Files | Real-World Risk | Recommended Fix | Mandatory Before Production |
-|---|-----------|----------|---------------|----------------|-----------------|-----------------|----------------------------|
-| 1 | `node_modules/playwright` inside extension | **Critical** | Web Store submission fails — ZIP >128 MB | `package.json`, `node_modules/` | Extension cannot be published to Chrome Web Store | Move `package.json` + `node_modules/` outside `capsule-extension/`; add `.gitignore` | **YES** |
-| 2 | `export.html` inline script blocked by CSP | **Critical** | Export page blank in packed/production extension | `export/export.html` | Users can never export a PDF in production | Extract to `export/export.js`, reference via `<script src>` | **YES** |
-| 3 | `.auth-state.json` with live session tokens | **High** | Session tokens committed to VCS → account compromise | `selector-health-check.js` | Developer's ChatGPT/Claude accounts compromised if repo is remote | Add to `.gitignore` immediately; rotate tokens if already pushed | **YES** |
-| 4 | Settings blank key wipe on decrypt failure | **High** | API key permanently destroyed without warning | `settings/settings.js` | User loses API access after extension update, cannot recover | Block save if key field blank + `_keyDecryptFailed`; require re-entry | **YES** |
-| 5 | RAF inject animation not cancellable | **High** | Text injected into chat after user clicks Close | `content/widget.js` | Unexpected text appears in user's active chat — data integrity issue | Add cancellation flag checked before `doInject` | **YES** |
-| 6 | `exportPDF()` not awaited | **High** | False "success" feedback if storage write fails | `popup/popup.js` | User thinks export worked; tab opens to blank/error page | `await exportPDF(cap, type)` in click handler; show error on failure | **YES** |
-| 7 | `saveResp?.success !== false` falsy check | **High** | Dropped messages treated as successful saves | `popup/popup.js` | User sees "Saved!" but nothing persisted; silent data loss | Check `saveResp?.success === true` explicitly | **YES** |
-| 8 | Legacy capsule export shows blank Raw section | **High** | Pre-v3 capsule PDFs have empty conversation area | `export/export.html` | Useless exports for any capsule saved before v3 migration | Fallback to `cap.raw?.text` when `messages` is undefined | **YES** |
-| 9 | Export page hangs indefinitely | **Medium** | No error state when export key missing | `export/export.html` | User waits forever on blank page; likely uninstalls extension | Add 10s timeout + clear error + close button | **YES** |
-| 10 | Copilot shadow DOM — silent empty capture | **Medium** | All Copilot saves return 0 messages with no explanation | `content/copilot.js` | Users believe extension is broken on Copilot | Show explicit "Copilot shadow DOM limitation" error message | **YES** |
-| 11 | Perplexity Strategy 3 selector too broad | **Medium** | Nav/header/footer captured as conversation content | `content/perplexity.js` | Garbled capsule content from Perplexity | Scope to `main section` or specific ancestor | **YES** |
-| 12 | Perplexity Strategy 4 loses user messages | **Medium** | All user questions missing from Perplexity capsules | `content/perplexity.js` | Half the conversation lost; context injection useless | Add user-message selector to Strategy 4 fallback | **YES** |
-| 13 | Meta Strategy 4 `[class*="bubble"]` too broad | **Medium** | UI components captured as messages | `content/meta.js` | Garbled capsule content from Meta AI | Scope to conversation thread container | **YES** |
-| 14 | Mistral `[data-role]` too broad | **Medium** | Navigation elements captured as messages | `content/mistral.js` | Garbled capsule content from Mistral | Filter to only `data-role="user"` and `data-role="assistant"` | **YES** |
-| 15 | Grok Strategy 4 no deduplication | **Medium** | Parent + child elements duplicated in capsule | `content/grok.js` | Doubled/garbled message content from Grok | Apply ancestor-deduplication filter (same as claude.js) | **YES** |
-| 16 | PBKDF2 key = public extension ID | **Medium** | AES encryption key derivable from public data | `utils/storage.js` | Attacker with storage dump can decrypt API keys | Add per-device random salt; increase iterations to ≥100,000 | **YES** |
-| 17 | `checkForNewChatResume()` raw preview blank | **Medium** | Resume prompt shows no content preview | `content/widget.js` | Feature appears broken; users dismiss without understanding | Use `getRawText(latest)` instead of `latest.raw?.text` | **YES** |
-| 18 | Error body redaction incomplete | **Medium** | `api_key`, `Bearer` patterns not redacted in error logs | `utils/summarize.js` | Partial credential exposure in error responses | Add regex patterns for `api[_-]?key`, `bearer`, `token` | **YES** |
-| 19 | Storage size check pre-append | **Medium** | New capsule size not counted; can exceed 4.8 MB cap | `utils/storage.js` | Silent write failure or exceeding Chrome 5 MB hard limit | Check post-append serialized size | **YES** |
-| 20 | New capsule bypasses active search filter | **Medium** | New capsule appears in filtered results when it shouldn't | `popup/popup.js` | Confusing search behavior; filter state broken | Check new card against `currentSearchQuery` before prepend | **NO** |
-| 21 | Settings `onSave` no in-progress guard | **Medium** | Concurrent `saveSettings` calls on rapid clicks | `settings/settings.js` | Last write wins; potential state corruption | Disable Save button on first click, re-enable on complete | **NO** |
-| 22 | `_writeQueue` lost on service worker restart | **Medium** | Queued writes lost on Chrome service worker kill | `background/service-worker.js` | Rare data loss mid-heavy-use session | Document limitation; verify popup 3-retry covers this | **NO** |
-| 23 | `setInterval` URL polling never cleared | **Low** | 1200ms interval runs for page lifetime | `content/widget.js` | Minor CPU drain on every AI chat tab | Store ID; clear when Navigation API available or on unload | **NO** |
-| 24 | `grabbing` CSS class never removed | **Low** | Cursor stays as grab hand after drag | `content/widget.js` | Minor cosmetic but affects usability of widget | Add `widget.classList.remove('grabbing')` in `mouseup` handler | **NO** |
-| 25 | Wrong platform label in exported PDF | **Low** | 7 of 9 platforms labeled "Claude" in PDF | `export/export.html` | Misleading export metadata | Map `cap.source` to full platform badge list | **NO** |
-| 26 | `esc(m.text)` renders "undefined" | **Low** | Literal "undefined" text in PDF for null messages | `export/export.html` | Minor data corruption in edge case | `esc(m.text ?? '')` | **NO** |
-| 27 | `friendlySaveError` dead code | **Low** | Dead branch for removed lock timeout | `popup/popup.js` | Misleads future debugging | Remove the `lock timeout` branch | **NO** |
-| 28 | `"tabs"` permission too broad | **Low** | Access to all tab URLs/titles, not just active | `manifest.json` | Privacy warning on install; larger attack surface | Remove `"tabs"`; rely on `activeTab` + `scripting` | **NO** |
-| 29 | `popup.html` inline theme script vs CSP | **Low** | Theme flash on load in packed extension | `popup/popup.html` | Minor visual glitch; no functional impact | Extract to `theme-init.js` | **NO** |
-| 30 | `selector-health-check.js` tests 2 of 9 platforms | **Low** | 7 platforms untested by health check | `selector-health-check.js` | Selector regressions on 7 platforms go undetected | Extend to cover all 9 platforms | **NO** |
-| 31 | Screenshots with conversation data in VCS | **Low** | Sensitive conversation content in `test-screenshots/` | `selector-health-check.js` | Privacy leak if repo is public | Add `test-screenshots/` to `.gitignore`; delete after test run | **NO** |
-| 32 | `onDelete` animation race window | **Low** | `allCapsules` stale for 180ms after delete | `popup/popup.js` | Edge case: rapid actions during animation | Guard against re-actions during animation window | **NO** |
-
----
-
-## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## COUNCIL VERDICT
-## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **The extension has 2 hard launch blockers** (node_modules inside extension directory, export page CSP) that make production deployment impossible in the current state. Beyond those, there are **16 issues that are mandatory before production** covering data loss, silent failures, security risks, and broken functionality across 6 of 9 supported platforms. The extension core logic (ChatGPT/Claude capture, storage, inject) is solid — the remaining issues are concentrated in: the export system, multi-platform scrapers (Copilot, Perplexity, Meta, Mistral, Grok), settings key management, and the inject animation flow.
 

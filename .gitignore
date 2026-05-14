@@ -12,9 +12,10 @@ gstack/
 node_modules/
 *.lock
 
-# Test artifacts
+# Test artifacts & development scripts
 test-screenshots/
 .auth-state.json
+selector-health-check.js
 selector-health-check.log
 
 # OS files
@@ -32,10 +33,11 @@ npm-debug.log*
 .idea/
 *.sublime-*
 
-# Python
+# Python & Environment
 __pycache__/
 *.pyc
 .env
+.env.local
 
 # Build outputs (if any future builds added)
 dist/
